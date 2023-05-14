@@ -6,6 +6,9 @@ import { Topping } from "../topping/topping.entity";
 import { ProductTopping } from "../product-topping/productTopping.entity";
 import { SizeProduct } from "../size-product/sizeProduct.entity";
 import { Voucher } from "../voucher/voucher.entity";
+import { Order } from "../order/order.entity";
+import { OrderProductDetail } from "../order/orderProductDetail.entity";
+import { OrderToppingDetail } from "../order/orderToppingDetail.entity";
 
 export const databaseProviders = [
     {
@@ -30,6 +33,9 @@ export const databaseProviders = [
                 ProductTopping,
                 SizeProduct,
                 Voucher,
+                Order,
+                OrderProductDetail,
+                OrderToppingDetail,
             ]);
             await sequelize.sync();
             return sequelize;

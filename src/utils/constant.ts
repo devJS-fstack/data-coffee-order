@@ -10,3 +10,15 @@ export default {
 export const STORE_PROCEDURES = {
     GET_PRODUCT_TOPPING: "GetProductWithToppings",
 };
+
+export const STATUS_ORDERS = {
+    CREATED: "CREATED",
+    ORDERED: "ORDERED",
+    IN_TRANSIT: "IN_TRANSIT",
+    DELIVERED: "DELIVERED",
+};
+
+export const VOUCHER_TYPES = {
+    PERCENT_DISCOUNT: "PERCENT_DISCOUNT",
+    PRICE_DISCOUNT: "PRICE_DISCOUNT",
+};

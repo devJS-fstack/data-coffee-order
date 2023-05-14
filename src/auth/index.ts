@@ -23,4 +23,8 @@ export class BaseAuthentication {
 
         return isAuthorized;
     }
+
+    parseToken(accessToken: string): any {
+        return jwt.decode(accessToken);
+    }
 }
