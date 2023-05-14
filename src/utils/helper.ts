@@ -37,3 +37,5 @@ export const decodeAes = (data: any, secretKey: string) => {
         return {};
     }
 };
+
+export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));

@@ -1,4 +1,4 @@
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { IUser } from "src/modules/user";
 
 export class BaseAuthentication {
@@ -11,5 +11,16 @@ export class BaseAuthentication {
             "private key",
             { expiresIn: "30m" },
         );
+    }
+
+    verify(accessToken: string) {
+        let isAuthorized = true;
+        try {
+            jwt.verify(accessToken, "private key");
+        } catch {
+            isAuthorized = false;
+        }
+
+        return isAuthorized;
     }
 }

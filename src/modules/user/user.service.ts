@@ -1,13 +1,11 @@
 import { Injectable, Inject, HttpException, BadRequestException } from "@nestjs/common";
 import { User } from "./user.entity";
-import { Vigenere } from "src/utils/vigenere";
 import { sendEmail, encodeAes, decodeAes } from "src/utils/helper";
 import { WelcomeEmail } from "src/mail/template";
 import { BaseAuthentication } from "src/auth";
 
 @Injectable()
 export class UserService {
-    private vigenere = new Vigenere();
     constructor(
         @Inject("USERS_REPOSITORY")
         private userRepository: typeof User,

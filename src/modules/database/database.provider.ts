@@ -1,5 +1,11 @@
 import { Sequelize } from "sequelize-typescript";
-import { User } from "src/modules/user/user.entity";
+import { User } from "../user/user.entity";
+import { Category } from "../category/category.entity";
+import { Product } from "../product/product.entity";
+import { Topping } from "../topping/topping.entity";
+import { ProductTopping } from "../product-topping/productTopping.entity";
+import { SizeProduct } from "../size-product/sizeProduct.entity";
+import { Voucher } from "../voucher/voucher.entity";
 
 export const databaseProviders = [
     {
@@ -16,7 +22,15 @@ export const databaseProviders = [
                     // console.log(query);
                 },
             });
-            sequelize.addModels([User]);
+            sequelize.addModels([
+                User,
+                Category,
+                Product,
+                Topping,
+                ProductTopping,
+                SizeProduct,
+                Voucher,
+            ]);
             await sequelize.sync();
             return sequelize;
         },
