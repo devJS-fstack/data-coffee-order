@@ -9,6 +9,7 @@ import { Voucher } from "../voucher/voucher.entity";
 import { Order } from "../order/order.entity";
 import { OrderProductDetail } from "../order/orderProductDetail.entity";
 import { OrderToppingDetail } from "../order/orderToppingDetail.entity";
+import { Role } from "../user/role.entity";
 
 export const databaseProviders = [
     {
@@ -36,8 +37,11 @@ export const databaseProviders = [
                 Order,
                 OrderProductDetail,
                 OrderToppingDetail,
+                Role,
             ]);
             await sequelize.sync();
+            OrderToppingDetail.belongsTo(Topping, { foreignKey: "topping_id" });
+            User.belongsTo(Role, { foreignKey: "roleId" });
             return sequelize;
         },
     },

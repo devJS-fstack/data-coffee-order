@@ -1,4 +1,5 @@
 import { Product } from "../product/product.entity";
+import { SizeProduct } from "../size-product/sizeProduct.entity";
 import { Topping } from "../topping/topping.entity";
 import { Voucher } from "../voucher/voucher.entity";
 import { Order } from "./order.entity";
@@ -29,5 +30,9 @@ export const orderProviders = [
     {
         provide: "VOUCHERS_REPOSITORY",
         useValue: Voucher,
+    },
+    {
+        provide: "SIZE_PRODUCT_REPOSITORY",
+        useValue: SizeProduct,
     },
 ];

@@ -7,6 +7,13 @@ export const signUpSchema = Joi.object({
     firstName: validateString("firstName"),
     password: validateString("Password"),
     phoneNumber: validateString("Phone number"),
+    roleId: Joi.number().optional(),
+});
+
+export const updateProfileSchema = Joi.object({
+    lastName: validateString("lastName"),
+    firstName: validateString("firstName"),
+    phoneNumber: validateString("Phone number"),
 });
 
 export const loginSchema = Joi.object({

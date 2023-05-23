@@ -9,7 +9,7 @@ export class BaseAuthentication {
                 ...user,
             },
             "private key",
-            { expiresIn: "30m" },
+            { expiresIn: "30d" },
         );
     }
 

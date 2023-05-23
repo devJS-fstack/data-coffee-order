@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Res, UsePipes } from "@nestjs/common";
+import { Body, Controller, Get, Post, Res, UsePipes, Query } from "@nestjs/common";
 import { VoucherService } from "./voucher.service";
 import { BaseValidationPipe } from "src/validation/base";
 import { createVoucherSchema } from "src/validation/voucher";
@@ -20,5 +20,17 @@ export class VoucherController {
     @UsePipes(new BaseValidationPipe(createVoucherSchema))
     async createVoucher(@Body() voucher: IVoucher) {
         await this.voucherService.createVoucher(voucher);
+    }
+
+    @Get("/discount")
+    async getDiscountVoucher(@Res() res, @Query() query: { totalPayment: number; code: string }) {
+        const data = await this.voucherService.getDiscountByVoucher({
+            totalPayment: query.totalPayment,
+            code: query.code,
+        });
+        res.status(200).json({
+            message: "success",
+            data,
+        });
     }
 }

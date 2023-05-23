@@ -43,6 +43,9 @@ export class Order extends Model {
     @Column({ field: "created" })
     created: string;
 
+    @Column({ field: "updated" })
+    updated: string;
+
     @ForeignKey(() => IVoucher)
     @Column({ field: "voucher_id" })
     voucherId: number;

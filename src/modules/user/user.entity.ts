@@ -1,4 +1,5 @@
-import { Table, Column, Model, AutoIncrement, PrimaryKey } from "sequelize-typescript";
+import { Table, Column, Model, AutoIncrement, PrimaryKey, ForeignKey } from "sequelize-typescript";
+import { Role } from "./role.entity";
 
 @Table({ name: { singular: "User" }, timestamps: false })
 export class User extends Model {
@@ -21,4 +22,17 @@ export class User extends Model {
 
     @Column
     password: string;
+
+    @Column
+    status: string;
+
+    @ForeignKey(() => Role)
+    @Column({ field: "role_id" })
+    roleId: number;
+
+    @Column({ defaultValue: false })
+    deleted: boolean;
+
+    @Column({ field: "deleted_at" })
+    deletedAt: string;
 }
