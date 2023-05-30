@@ -34,4 +34,13 @@ export class Product extends Model {
 
     @BelongsTo(() => ICategory)
     category: ICategory;
+
+    @Column({ defaultValue: true })
+    enable: boolean;
+
+    @Column({ defaultValue: false })
+    deleted: boolean;
+
+    @Column({ field: "deleted_at" })
+    deletedAt: string;
 }

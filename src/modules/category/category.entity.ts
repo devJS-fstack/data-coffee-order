@@ -15,4 +15,13 @@ export class Category extends Model {
 
     @Column
     description: string;
+
+    @Column({ defaultValue: true })
+    enable: boolean;
+
+    @Column({ defaultValue: false })
+    deleted: boolean;
+
+    @Column({ field: "deleted_at" })
+    deletedAt: string;
 }

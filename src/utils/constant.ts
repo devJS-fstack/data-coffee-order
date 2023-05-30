@@ -9,6 +9,8 @@ export default {
 
 export const STORE_PROCEDURES = {
     GET_PRODUCT_TOPPING: "GetProductWithToppings",
+    GET_CATEGORY_INFO: "GetCategoryInfo",
+    GET_TOPPING_INFO: "GetToppingsInfo",
 };
 
 export const STATUS_ORDERS = {

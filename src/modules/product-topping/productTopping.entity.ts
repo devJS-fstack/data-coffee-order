@@ -10,10 +10,10 @@ export class ProductTopping extends Model {
     id: number;
 
     @ForeignKey(() => IProduct)
-    @Column
-    product_id: number;
+    @Column({ field: "product_id" })
+    productId: number;
 
     @ForeignKey(() => ITopping)
-    @Column
-    topping_id: number;
+    @Column({ field: "topping_id" })
+    toppingId: number;
 }

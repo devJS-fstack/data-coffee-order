@@ -114,7 +114,7 @@ export class UserService {
         };
     }
 
-    async updateProfile(userId, user: User) {
+    async updateProfile(userId: number, user: User) {
         await delay(2000);
         const { firstName, lastName, phoneNumber, roleId } = user;
         const isExistPhone = await this.userRepository.findOne({

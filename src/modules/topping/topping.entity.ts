@@ -12,4 +12,13 @@ export class Topping extends Model {
 
     @Column
     price: number;
+
+    @Column({ defaultValue: true })
+    enable: boolean;
+
+    @Column({ defaultValue: false })
+    deleted: boolean;
+
+    @Column({ field: "deleted_at" })
+    deletedAt: string;
 }

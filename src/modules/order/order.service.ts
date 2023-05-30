@@ -193,12 +193,6 @@ export class OrderService {
             }
         }
 
-        await this.orderRepository.update(
-            {
-                updated: moment().format("YYYY-MM-DD HH:mm:ss"),
-            },
-            { where: { id: productOrder.orderId } },
-        );
         const listIdOrderToppingRemove = orderToppingExists
             .filter(
                 (element) =>
@@ -215,10 +209,17 @@ export class OrderService {
                 },
             });
         }
+
+        await this.orderRepository.update(
+            {
+                updated: moment().format("YYYY-MM-DD HH:mm:ss"),
+            },
+            { where: { id: productOrder.orderId } },
+        );
     }
 
     async getNewOrder(currentUser: ICurrentUser) {
-        await delay(2000);
+        await delay(1000);
         const newOrder = await this.orderRepository.findOne({
             where: { status: STATUS_ORDERS.CREATED, userId: currentUser.id },
         });
@@ -243,7 +244,7 @@ export class OrderService {
                         return {
                             ...productOrder.dataValues,
                             nameProduct: productDetail.nameProduct,
-                            size: sizeDetail.size,
+                            size: sizeDetail.dataValues.size,
                             toppings: toppings || [],
                         };
                     }),

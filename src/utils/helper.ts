@@ -2,6 +2,8 @@ import nodeMailer from "nodemailer";
 import { config } from "dotenv";
 import { template } from "lodash";
 import cryptoJs from "crypto-js";
+import fs from "fs";
+import path from "path";
 
 config();
 
@@ -39,3 +41,24 @@ export const decodeAes = (data: any, secretKey: string) => {
 };
 
 export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+export const uploadImage = async (file: Express.Multer.File, fileName: string, folder: string) => {
+    const parentDirectory = path.resolve(__dirname, "../../../");
+    const imagesFolderPath = path.join(parentDirectory, `store/images/${folder}`);
+    let fileType = "png";
+    switch (file.mimetype) {
+        case "image/jpeg":
+            fileType = "jpg";
+            break;
+        case "image/png":
+            fileType = "png";
+            break;
+        default:
+            break;
+    }
+    const newFileName = `${fileName}.${fileType}`;
+    const filePath = path.join(imagesFolderPath, newFileName);
+
+    fs.writeFileSync(filePath, file.buffer);
+    return `http://localhost:3900/images/${folder}/${newFileName}`;
+};
