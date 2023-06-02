@@ -9,18 +9,19 @@ import {
     Param,
     Patch,
     Delete,
+    ParseBoolPipe,
+    Query,
 } from "@nestjs/common";
 import { ToppingService } from "./topping.service";
-import { delay } from "src/utils/helper";
 
 @Controller("toppings")
 export class ToppingController {
     constructor(private readonly toppingService: ToppingService) {}
     @Get("/")
-    async get(@Res() res) {
+    async get(@Res() res, @Query("enable", ParseBoolPipe) enable: boolean) {
         res.status(200).json({
             message: "success",
-            data: await this.toppingService.findAll(),
+            data: await this.toppingService.findAll({ enable }),
         });
     }
 

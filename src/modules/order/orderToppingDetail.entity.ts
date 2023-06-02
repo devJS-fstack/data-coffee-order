@@ -2,8 +2,9 @@ import { Table, Column, Model, AutoIncrement, PrimaryKey, ForeignKey } from "seq
 import { ITopping } from "../topping";
 import { OrderProductDetail } from "./orderProductDetail.entity";
 import { Topping } from "../topping/topping.entity";
+import { IOrder } from ".";
 
-@Table({ name: { singular: "Category" }, timestamps: false })
+@Table({ name: { singular: "OrderToppingDetail" }, timestamps: false })
 export class OrderToppingDetail extends Model {
     @AutoIncrement
     @PrimaryKey
@@ -26,4 +27,14 @@ export class OrderToppingDetail extends Model {
     @ForeignKey(() => OrderProductDetail)
     @Column({ field: "product_order_id" })
     productOrderId: number;
+
+    @ForeignKey(() => IOrder)
+    @Column({ field: "order_id" })
+    orderId: number;
+
+    @Column
+    status: string;
+
+    @Column
+    updated: string;
 }

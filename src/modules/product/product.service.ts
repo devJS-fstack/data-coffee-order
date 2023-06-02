@@ -1,13 +1,15 @@
 import { Injectable, Inject, BadRequestException } from "@nestjs/common";
 import { IProduct } from "./index";
 import { delay, uploadImage } from "src/utils/helper";
-import { STORE_PROCEDURES, STATUS_ACCOUNTS } from "src/utils/constant";
+import { STORE_PROCEDURES, STATUS_ACCOUNTS, STATUS_ORDERS } from "src/utils/constant";
 import { isEmpty } from "lodash";
 import { SizeProductService } from "../size-product/sizeProduct.service";
 import { ICategory } from "../category";
 import { ISizeProduct } from "../size-product";
+import { IOrderProductDetail } from "../order";
 import { Op } from "sequelize";
 import moment from "moment";
+import { IProductTopping } from "../product-topping";
 
 @Injectable()
 export class ProductService {
@@ -18,6 +20,10 @@ export class ProductService {
         private categoryRepository: typeof ICategory,
         @Inject("SIZES_REPOSITORY")
         private sizeProductRepository: typeof ISizeProduct,
+        @Inject("PRODUCT_TOPPING_REPOSITORY")
+        private productToppingRepository: typeof IProductTopping,
+        @Inject("ORDER_PRODUCTS_REPOSITORY")
+        private orderProductRepository: typeof IOrderProductDetail,
         private readonly sizeProductService: SizeProductService,
     ) {}
 
@@ -62,7 +68,14 @@ export class ProductService {
                     const sizeProducts = await this.sizeProductRepository.findAll({
                         where: { productId: product.id },
                     });
-                    return { ...product.dataValues, sizes: sizeProducts };
+                    const toppings = await this.productToppingRepository.findAll({
+                        where: { productId: product.id },
+                    });
+                    return {
+                        ...product.dataValues,
+                        sizes: sizeProducts,
+                        toppingIds: toppings.map((topping) => topping.toppingId),
+                    };
                 }),
             ),
         };
@@ -104,6 +117,8 @@ export class ProductService {
                 id: element.topping_id,
                 price: element.price_topping,
                 nameTopping: element.name_topping,
+                deleted: element.deleted,
+                enable: element.enable,
             })),
             sizes: sizeProducts.map((sizeProduct) => ({
                 id: sizeProduct.id,
@@ -120,6 +135,7 @@ export class ProductService {
         categoryId,
         price,
         sizes,
+        toppingIds,
     }: {
         favIcon: Express.Multer.File;
         nameProduct: string;
@@ -130,6 +146,7 @@ export class ProductService {
             name: string;
             price: number;
         }[];
+        toppingIds: number[];
     }) {
         const existName = await this.productRepository.findOne({
             where: {
@@ -170,6 +187,15 @@ export class ProductService {
                 productId: productDoc.id,
             });
         }
+
+        if (toppingIds.length) {
+            await this.productToppingRepository.bulkCreate(
+                toppingIds.map((toppingId) => ({
+                    toppingId,
+                    productId: productDoc.id,
+                })),
+            );
+        }
     }
 
     async updateProduct({
@@ -180,6 +206,7 @@ export class ProductService {
         productId,
         price,
         sizes,
+        toppingIds,
     }: {
         productId: number;
         favIcon: Express.Multer.File;
@@ -191,6 +218,7 @@ export class ProductService {
             name: string;
             price: number;
         }[];
+        toppingIds: number[];
     }) {
         const isExistName = await this.productRepository.findOne({
             where: {
@@ -226,6 +254,11 @@ export class ProductService {
                 productId,
             },
         });
+        await this.productToppingRepository.destroy({
+            where: {
+                productId,
+            },
+        });
 
         if (sizes?.length) {
             await this.sizeProductRepository.bulkCreate(
@@ -242,6 +275,31 @@ export class ProductService {
                 productId,
             });
         }
+
+        if (toppingIds.length) {
+            await this.productToppingRepository.bulkCreate(
+                toppingIds.map((toppingId) => ({
+                    toppingId,
+                    productId,
+                })),
+            );
+        }
+
+        const sizeDefault = await this.sizeProductRepository.findOne({
+            where: { productId, price: 0 },
+        });
+
+        await this.orderProductRepository.sequelize.query(
+            "UPDATE OrderProductDetails SET total_price = :price * quantity, size_id = :sizeId WHERE product_id = :productId AND status = :status",
+            {
+                replacements: {
+                    price,
+                    sizeId: sizeDefault.id,
+                    productId,
+                    status: STATUS_ORDERS.CREATED,
+                },
+            },
+        );
     }
 
     async deleteProduct(productId: number) {
@@ -259,7 +317,7 @@ export class ProductService {
     }
 
     async updateStatus(productId: number, status: string) {
-        const countUpdate = await this.productRepository.update(
+        const [countUpdate] = await this.productRepository.update(
             {
                 enable: status === STATUS_ACCOUNTS.ACTIVE,
             },

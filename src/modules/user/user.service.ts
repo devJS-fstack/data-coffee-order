@@ -1,4 +1,10 @@
-import { Injectable, Inject, HttpException, BadRequestException } from "@nestjs/common";
+import {
+    Injectable,
+    Inject,
+    HttpException,
+    BadRequestException,
+    UnauthorizedException,
+} from "@nestjs/common";
 import { User } from "./user.entity";
 import { sendEmail, encodeAes, decodeAes, delay } from "src/utils/helper";
 import { WelcomeEmail } from "src/mail/template";
@@ -175,6 +181,15 @@ export class UserService {
 
         if (!countUpdate) {
             throw new BadRequestException("User is not existed");
+        }
+    }
+
+    async authentication({ role, userId }: { userId: number; role: string }) {
+        const userDetail = await this.userRepository.findByPk(userId);
+        const roleDetail = await this.roleRepository.findOne({ where: { role } });
+
+        if (userDetail && roleDetail && userDetail.roleId !== roleDetail.id) {
+            throw new UnauthorizedException();
         }
     }
 }

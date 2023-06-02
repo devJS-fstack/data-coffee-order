@@ -3,7 +3,7 @@ import { IVoucher } from "../voucher";
 import { IUser } from "../user";
 import { DATE } from "sequelize";
 
-@Table({ name: { singular: "Category" }, timestamps: false })
+@Table({ name: { singular: "Order" }, timestamps: false })
 export class Order extends Model {
     @AutoIncrement
     @PrimaryKey

@@ -57,8 +57,10 @@ export class ProductController {
         const payload = JSON.parse(JSON.stringify(body));
         await this.productService.createProduct({
             ...payload,
+            description: payload.description === "undefined" ? "" : payload.description,
             favIcon: file,
             sizes: payload.sizes === "undefined" ? [] : JSON.parse(payload?.sizes),
+            toppingIds: payload.toppingIds === "undefined" ? [] : JSON.parse(payload?.toppingIds),
         });
         res.status(200).json({
             message: "success",
@@ -74,12 +76,13 @@ export class ProductController {
         @Param("productId", ParseIntPipe) productId: number,
     ) {
         const payload = JSON.parse(JSON.stringify(body));
-        console.log(payload.sizes);
         await this.productService.updateProduct({
             ...payload,
+            description: payload.description === "undefined" ? "" : payload.description,
             favIcon: file,
             sizes: payload.sizes === "undefined" ? [] : JSON.parse(payload?.sizes),
             productId,
+            toppingIds: payload.toppingIds === "undefined" ? [] : JSON.parse(payload?.toppingIds),
         });
         res.status(200).json({
             message: "success",

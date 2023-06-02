@@ -1,7 +1,8 @@
 import { Injectable, Inject, BadRequestException } from "@nestjs/common";
 import { ITopping } from "./index";
-import { STORE_PROCEDURES, STATUS_ACCOUNTS } from "src/utils/constant";
+import { STORE_PROCEDURES, STATUS_ACCOUNTS, STATUS_ORDERS } from "src/utils/constant";
 import { IProductTopping } from "../product-topping";
+import { IOrderToppingDetail } from "../order";
 import { Op } from "sequelize";
 import moment from "moment";
 
@@ -12,10 +13,18 @@ export class ToppingService {
         private toppingRepository: typeof ITopping,
         @Inject("PRODUCT_TOPPING_REPOSITORY")
         private productToppingRepository: typeof IProductTopping,
+        @Inject("ORDER_TOPPINGS_REPOSITORY")
+        private orderToppingRepository: typeof IOrderToppingDetail,
     ) {}
 
-    async findAll() {
-        const toppings = await this.toppingRepository.findAll({ where: { deleted: false } });
+    async findAll({ enable }: { enable: boolean }) {
+        const query: any = {
+            deleted: false,
+        };
+        if (enable) {
+            query.enable = enable;
+        }
+        const toppings = await this.toppingRepository.findAll({ where: query });
         return Promise.all(
             toppings.map(async (topping) => {
                 const productToppings = await this.productToppingRepository.findAll({
@@ -103,18 +112,46 @@ export class ToppingService {
             }));
             await this.productToppingRepository.bulkCreate(dataMapped);
         }
+
+        await this.orderToppingRepository.sequelize.query(
+            "UPDATE OrderToppingDetails SET total_price = :price * quantity WHERE topping_id = :toppingId AND status = :status",
+            {
+                replacements: {
+                    price,
+                    toppingId,
+                    status: STATUS_ORDERS.CREATED,
+                },
+            },
+        );
     }
 
     async updateStatus(toppingId: number, status: string) {
+        const isEnable = status === STATUS_ACCOUNTS.ACTIVE;
         const [countUpdate] = await this.toppingRepository.update(
             {
-                enable: status === STATUS_ACCOUNTS.ACTIVE,
+                enable: isEnable,
             },
             { where: { id: toppingId } },
         );
 
         if (!countUpdate) {
             throw new BadRequestException("Topping is not existed");
+        }
+
+        if (isEnable) {
+            await this.orderToppingRepository.update(
+                {
+                    status: STATUS_ORDERS.CREATED,
+                },
+                { where: { toppingId, status: STATUS_ACCOUNTS.DISABLED } },
+            );
+        } else {
+            await this.orderToppingRepository.update(
+                {
+                    status,
+                },
+                { where: { toppingId, status: STATUS_ORDERS.CREATED } },
+            );
         }
     }
 
@@ -132,5 +169,12 @@ export class ToppingService {
         if (!countUpdate) {
             throw new BadRequestException("Topping is not existed");
         }
+
+        await this.orderToppingRepository.destroy({
+            where: {
+                toppingId,
+                status: STATUS_ORDERS.CREATED,
+            },
+        });
     }
 }

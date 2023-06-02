@@ -63,6 +63,15 @@ export class OrderController {
         });
     }
 
+    @Get("/all")
+    async getOrders(@Res() res, @Req() req: IRequest) {
+        const data = await this.orderService.getOrders(req.currentUser.id);
+        res.status(200).json({
+            message: "success",
+            data,
+        });
+    }
+
     @Delete("/product-orders/:productOrderId")
     async deleteProductOrder(
         @Param("productOrderId", ParseIntPipe) productOrderId: number,

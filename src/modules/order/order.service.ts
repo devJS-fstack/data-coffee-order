@@ -2,10 +2,12 @@ import { Injectable, Inject, BadRequestException } from "@nestjs/common";
 import { IOrder, IOrderProductDetail, IOrderToppingDetail } from "./index";
 import { ICurrentUser } from "src/middleware/authentication";
 import moment from "moment";
+import { IUser } from "../user";
+import { UserService } from "../user/user.service";
 import { IProduct } from "../product";
 import { Op, or } from "sequelize";
 import { ITopping } from "../topping";
-import { STATUS_ORDERS, VOUCHER_TYPES } from "src/utils/constant";
+import { STATUS_ORDERS, VOUCHER_TYPES, STATUS_ACCOUNTS, ROLES } from "src/utils/constant";
 import { IVoucher } from "../voucher";
 import { ISizeProduct } from "../size-product";
 import { toNumber, sumBy } from "lodash";
@@ -54,6 +56,7 @@ export class OrderService {
         private voucherRepository: typeof IVoucher,
         @Inject("SIZE_PRODUCT_REPOSITORY")
         private sizeProductRepository: typeof ISizeProduct,
+        private userService: UserService,
     ) {}
 
     async findAll() {
@@ -67,7 +70,7 @@ export class OrderService {
         currentUser: ICurrentUser;
         payload: IPayloadCreateOrder;
     }) {
-        const { nameReceiver, phoneReceiver, shippingFee, orderDetail } = payload;
+        const { nameReceiver, phoneReceiver, orderDetail } = payload;
         let orderDoc = await this.orderRepository.findOne({
             where: { status: STATUS_ORDERS.CREATED, userId: currentUser.id },
         });
@@ -101,6 +104,7 @@ export class OrderService {
             quantity: orderDetail.quantity,
             totalPrice: totalPriceProduct,
             sizeId: orderDetail.sizeId,
+            status: STATUS_ORDERS.CREATED,
         });
 
         for (const orderTopping of orderDetail.toppings) {
@@ -111,11 +115,13 @@ export class OrderService {
 
             const totalPriceTopping = topping.price * orderTopping.quantity * orderDetail.quantity;
             await this.orderToppingRepository.create({
+                orderId: orderDoc.id,
                 toppingId: topping.id,
                 quantity: orderTopping.quantity,
                 totalPrice: totalPriceTopping,
                 productOrderId: orderToppingDoc.id,
                 productQuantity: orderDetail.quantity,
+                status: STATUS_ORDERS.CREATED,
             });
         }
 
@@ -178,17 +184,20 @@ export class OrderService {
                         totalPrice: totalPriceTopping,
                         quantity: toppingOrder.quantity,
                         productQuantity: quantity,
+                        updated: moment().format("YYYY-MM-DD HH:mm:ss"),
                     },
                     { where: { id: isExistOrderTopping.id } },
                 );
             } else {
                 // create new
                 await this.orderToppingRepository.create({
+                    orderId: productOrder.orderId,
                     toppingId: toppingDetail.id,
                     quantity: toppingOrder.quantity,
                     productQuantity: quantity,
                     productOrderId: productOrder.id,
                     totalPrice: totalPriceTopping,
+                    status: STATUS_ORDERS.CREATED,
                 });
             }
         }
@@ -239,12 +248,15 @@ export class OrderService {
                             productOrder.sizeId,
                         );
                         const toppings = await this.orderToppingRepository.findAll({
-                            where: { productOrderId: productOrder.id },
+                            where: {
+                                productOrderId: productOrder.id,
+                                status: STATUS_ORDERS.CREATED,
+                            },
                         });
                         return {
                             ...productOrder.dataValues,
                             nameProduct: productDetail.nameProduct,
-                            size: sizeDetail.dataValues.size,
+                            size: sizeDetail?.size,
                             toppings: toppings || [],
                         };
                     }),
@@ -403,10 +415,33 @@ export class OrderService {
                 },
             },
         );
+
+        await this.orderProductRepository.update(
+            {
+                updated: moment().format("YYYY-MM-DD HH:mm:ss"),
+                status: STATUS_ORDERS.ORDERED,
+            },
+            { where: { orderId } },
+        );
+
+        await this.orderToppingRepository.update(
+            {
+                updated: moment().format("YYYY-MM-DD HH:mm:ss"),
+                status: STATUS_ORDERS.ORDERED,
+            },
+            { where: { orderId } },
+        );
+
+        await this.orderToppingRepository.update(
+            {
+                updated: moment().format("YYYY-MM-DD HH:mm:ss"),
+                status: STATUS_ORDERS.ORDERED_TOPPING_DISABLED,
+            },
+            { where: { orderId, status: STATUS_ACCOUNTS.DISABLED } },
+        );
     }
 
     async getOrdersByUserId(userId: number) {
-        // await delay(2000);
         const orders = await this.orderRepository.findAll({
             where: {
                 userId,
@@ -441,7 +476,49 @@ export class OrderService {
                             return {
                                 ...productOrder.dataValues,
                                 nameProduct: productDetail.nameProduct,
-                                size: sizeDetail.size,
+                                size: sizeDetail?.size,
+                                toppings: toppings || [],
+                            };
+                        }),
+                    ),
+                };
+            }),
+        );
+    }
+
+    async getOrders(userId: number) {
+        await this.userService.authentication({ userId, role: ROLES.SUPER_ADMIN });
+        const orders = await this.orderRepository.findAll({});
+
+        return Promise.all(
+            orders.map(async (order) => {
+                const productOrders = await this.orderProductRepository.findAll({
+                    where: { orderId: order.id },
+                });
+
+                return {
+                    ...order.dataValues,
+                    productOrders: await Promise.all(
+                        productOrders.map(async (productOrder) => {
+                            const productDetail = await this.productRepository.findByPk(
+                                productOrder.productId,
+                            );
+                            const sizeDetail = await this.sizeProductRepository.findByPk(
+                                productOrder.sizeId,
+                            );
+                            const toppings = await this.orderToppingRepository.findAll({
+                                where: { productOrderId: productOrder.id },
+                                include: [
+                                    {
+                                        model: Topping,
+                                    },
+                                ],
+                            });
+                            return {
+                                ...productOrder.dataValues,
+                                nameProduct: productDetail.nameProduct,
+                                size: sizeDetail?.size,
+                                sizeDetail: sizeDetail?.dataValues,
                                 toppings: toppings || [],
                             };
                         }),

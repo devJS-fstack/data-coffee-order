@@ -3,7 +3,7 @@ import { ISizeProduct } from "../size-product";
 import { IOrder } from ".";
 import { IProduct } from "../product";
 
-@Table({ name: { singular: "Category" }, timestamps: false })
+@Table({ name: { singular: "OrderProductDetail" }, timestamps: false })
 export class OrderProductDetail extends Model {
     @AutoIncrement
     @PrimaryKey
@@ -27,4 +27,10 @@ export class OrderProductDetail extends Model {
     @ForeignKey(() => ISizeProduct)
     @Column({ field: "size_id" })
     sizeId: number;
+
+    @Column
+    updated: string;
+
+    @Column
+    status: string;
 }
