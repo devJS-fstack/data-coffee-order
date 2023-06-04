@@ -45,9 +45,26 @@ export class OrderController {
         });
     }
 
+    @Put("/mark-status/:orderId")
+    async markStatus(@Res() res, @Body() body, @Param("orderId", ParseIntPipe) orderId: number) {
+        await this.orderService.markStatus({ orderId });
+        res.status(200).json({
+            message: "success",
+        });
+    }
+
     @Get("/new")
     async getNewOrder(@Res() res, @Req() req: IRequest) {
         const data = await this.orderService.getNewOrder(req.currentUser);
+        res.status(200).json({
+            message: "success",
+            data,
+        });
+    }
+
+    @Get("/placed-order")
+    async getNumberOrderPlaced(@Res() res) {
+        const data = await this.orderService.getNumberOrderPlaced();
         res.status(200).json({
             message: "success",
             data,

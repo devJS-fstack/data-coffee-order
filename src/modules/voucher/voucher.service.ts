@@ -61,4 +61,8 @@ export class VoucherService {
 
         return 0;
     }
+
+    async getAllVoucher() {
+        return this.voucherRepository.findAll({ where: { deleted: false } });
+    }
 }

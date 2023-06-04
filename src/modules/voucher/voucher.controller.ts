@@ -16,6 +16,15 @@ export class VoucherController {
         });
     }
 
+    @Get("/all")
+    async getAllVoucher(@Res() res) {
+        const data = await this.voucherService.getAllVoucher();
+        res.status(200).json({
+            message: "success",
+            data,
+        });
+    }
+
     @Post("")
     @UsePipes(new BaseValidationPipe(createVoucherSchema))
     async createVoucher(@Body() voucher: IVoucher) {

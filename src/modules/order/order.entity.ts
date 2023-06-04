@@ -53,4 +53,16 @@ export class Order extends Model {
     @ForeignKey(() => IUser)
     @Column({ field: "user_id" })
     userId: number;
+
+    @Column({ field: "ordered_date" })
+    orderedDate: string;
+
+    @Column({ field: "processed_date" })
+    processedDate: string;
+
+    @Column({ field: "ship_date" })
+    shipDate: string;
+
+    @Column({ field: "received_date" })
+    receivedDate: string;
 }

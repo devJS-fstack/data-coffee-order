@@ -407,6 +407,7 @@ export class OrderService {
                 voucherId,
                 voucherDiscount,
                 updated: moment().format("YYYY-MM-DD HH:mm:ss"),
+                orderedDate: moment().format("YYYY-MM-DD HH:mm:ss"),
                 status: STATUS_ORDERS.ORDERED,
             },
             {
@@ -526,5 +527,46 @@ export class OrderService {
                 };
             }),
         );
+    }
+
+    async markStatus({ orderId }: { orderId: number }) {
+        const orderDetail = await this.orderRepository.findByPk(orderId);
+        if (!orderDetail) {
+            throw new BadRequestException("Order is not valid");
+        }
+
+        const stepStatus = {
+            ORDERED: {
+                status: STATUS_ORDERS.PROCESSED,
+                key: "processedDate",
+            },
+            PROCESSED: {
+                status: STATUS_ORDERS.IN_TRANSIT,
+                key: "shipDate",
+            },
+            IN_TRANSIT: {
+                status: STATUS_ORDERS.RECEIVED,
+                key: "receivedDate",
+            },
+        };
+
+        const newStatus = stepStatus[orderDetail.status];
+
+        if (!newStatus) {
+            throw new BadRequestException("Something went wrong !");
+        }
+
+        await this.orderRepository.update(
+            {
+                status: newStatus.status,
+                [`${newStatus.key}`]: moment().format("YYYY-MM-DD HH:mm:ss"),
+                updated: moment().format("YYYY-MM-DD HH:mm:ss"),
+            },
+            { where: { id: orderId } },
+        );
+    }
+
+    async getNumberOrderPlaced() {
+        return this.orderRepository.count({ where: { status: STATUS_ORDERS.ORDERED } });
     }
 }
