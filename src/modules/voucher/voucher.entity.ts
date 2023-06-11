@@ -40,9 +40,6 @@ export class Voucher extends Model {
     @Column({ field: "limit_use" })
     limitUse: number;
 
-    @Column
-    status: string;
-
     @Column({ defaultValue: true })
     enable: boolean;
 

@@ -13,6 +13,7 @@ import { Op } from "sequelize";
 import { Role } from "./role.entity";
 import { ROLES, STATUS_ACCOUNTS, FORMAT_DATE_TIME } from "src/utils/constant";
 import moment from "moment";
+import jwt from "jsonwebtoken";
 
 @Injectable()
 export class UserService {
@@ -69,18 +70,18 @@ export class UserService {
             }
         }
 
-        // await sendEmail(
-        //     {
-        //         to: email,
-        //         subject: WelcomeEmail.subject,
-        //         html: WelcomeEmail.body,
-        //     },
-        //     {
-        //         name: `${firstName} ${lastName}`,
-        //         email,
-        //         password,
-        //     },
-        // );
+        await sendEmail(
+            {
+                to: email,
+                subject: WelcomeEmail.subject,
+                html: WelcomeEmail.body,
+            },
+            {
+                name: `${firstName} ${lastName}`,
+                email,
+                password,
+            },
+        );
 
         const newUser = await this.userRepository.findOne({ where: { email } });
         if (!newUser) {
@@ -88,10 +89,12 @@ export class UserService {
         }
 
         const accessToken = new BaseAuthentication().generateToken(newUser.dataValues);
+        const refreshToken = new BaseAuthentication().generateRefreshToken(newUser);
         return {
             ...newUser.dataValues,
             password: undefined,
             accessToken,
+            refreshToken,
         };
     }
 
@@ -113,10 +116,13 @@ export class UserService {
         }
 
         const accessToken = new BaseAuthentication().generateToken(isExist.dataValues);
+        const refreshToken = new BaseAuthentication().generateRefreshToken(isExist);
+
         return {
             ...isExist.dataValues,
             accessToken,
             password: undefined,
+            refreshToken,
         };
     }
 
@@ -190,6 +196,30 @@ export class UserService {
 
         if (userDetail && roleDetail && userDetail.roleId !== roleDetail.id) {
             throw new UnauthorizedException();
+        }
+    }
+
+    async getNewAccessToken({
+        refreshToken,
+        accessToken,
+    }: {
+        refreshToken: string;
+        accessToken: string;
+    }) {
+        try {
+            jwt.verify(refreshToken, "private key");
+            const result: any = jwt.decode(accessToken);
+            delete result.iat;
+            delete result.exp;
+            const newAccessToken = new BaseAuthentication().generateToken(result);
+            const newRefreshToken = new BaseAuthentication().generateRefreshToken(result);
+            return {
+                accessToken: newAccessToken,
+                refreshToken: newRefreshToken,
+            };
+        } catch (error) {
+            console.log("Error while refreshing token", error);
+            return {};
         }
     }
 }

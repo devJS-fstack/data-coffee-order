@@ -13,6 +13,7 @@ import { ISizeProduct } from "../size-product";
 import { toNumber, sumBy } from "lodash";
 import { delay } from "src/utils/helper";
 import { Topping } from "../topping/topping.entity";
+import axios from "axios";
 
 interface IToppingDetail {
     toppingId: number;
@@ -344,6 +345,8 @@ export class OrderService {
         const voucherDetail = await this.voucherRepository.findOne({
             where: {
                 code,
+                enable: true,
+                deleted: false,
             },
         });
         const result = {
@@ -440,14 +443,24 @@ export class OrderService {
             },
             { where: { orderId, status: STATUS_ACCOUNTS.DISABLED } },
         );
+
+        await axios("http://localhost:8080/api/message", {
+            method: "POST",
+            data: {
+                message: "Hello",
+            },
+        });
     }
 
     async getOrdersByUserId(userId: number) {
         const orders = await this.orderRepository.findAll({
             where: {
                 userId,
-                status: STATUS_ORDERS.ORDERED,
+                status: {
+                    [Op.ne]: STATUS_ORDERS.CREATED,
+                },
             },
+            order: [["orderedDate", "DESC"]],
         });
 
         return Promise.all(

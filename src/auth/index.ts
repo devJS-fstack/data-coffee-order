@@ -9,19 +9,31 @@ export class BaseAuthentication {
                 ...user,
             },
             "private key",
-            { expiresIn: "30d" },
+            { expiresIn: "3m" },
+        );
+    }
+
+    generateRefreshToken(user: IUser) {
+        return jwt.sign(
+            {
+                uerId: user.id,
+            },
+            "private key",
+            { expiresIn: "1h" },
         );
     }
 
     verify(accessToken: string) {
         let isAuthorized = true;
+        let isExpired = false;
         try {
             jwt.verify(accessToken, "private key");
-        } catch {
+        } catch (error) {
+            isExpired = error.message.includes("expired");
             isAuthorized = false;
         }
 
-        return isAuthorized;
+        return { isAuthorized, isExpired };
     }
 
     parseToken(accessToken: string): any {

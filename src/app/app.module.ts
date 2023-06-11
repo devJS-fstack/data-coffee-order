@@ -12,6 +12,7 @@ import { VoucherModule } from "src/modules/voucher/voucher.module";
 import { OrderModule } from "src/modules/order/order.module";
 import { AuthenticationMiddleware } from "src/middleware/authentication";
 import { OrderController } from "src/modules/order/order.controller";
+import { VoucherController } from "src/modules/voucher/voucher.controller";
 
 @Module({
     imports: [
@@ -32,6 +33,6 @@ import { OrderController } from "src/modules/order/order.controller";
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AuthenticationMiddleware).forRoutes(OrderController);
+        consumer.apply(AuthenticationMiddleware).forRoutes(OrderController, VoucherController);
     }
 }

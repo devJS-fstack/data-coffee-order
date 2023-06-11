@@ -9,6 +9,7 @@ import {
     Param,
     ParseIntPipe,
     Delete,
+    Req,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./user.entity";
@@ -83,6 +84,16 @@ export class UserController {
         res.status(200).json({
             message: "success",
             data: await this.userService.getRoles(),
+        });
+    }
+
+    @Get("/refresh-token")
+    async refreshToken(@Res() res, @Req() req) {
+        const accessToken = req.headers.authorization?.replace("Bearer ", "");
+        const refreshToken = req.headers.refreshtoken?.replace("Bearer ", "");
+        res.status(200).json({
+            message: "success",
+            ...(await this.userService.getNewAccessToken({ refreshToken, accessToken })),
         });
     }
 }

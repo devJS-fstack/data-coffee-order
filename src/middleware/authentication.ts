@@ -1,4 +1,9 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from "@nestjs/common";
+import {
+    Injectable,
+    NestMiddleware,
+    UnauthorizedException,
+    ForbiddenException,
+} from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { BaseAuthentication } from "src/auth";
 
@@ -20,7 +25,11 @@ export class AuthenticationMiddleware implements NestMiddleware {
     use(req: IRequest, res: Response, next: NextFunction) {
         const baseAuthentication = new BaseAuthentication();
         const accessToken = req.headers.authorization?.replace("Bearer ", "");
-        const isAuthorized = baseAuthentication.verify(accessToken);
+        const { isAuthorized, isExpired } = baseAuthentication.verify(accessToken);
+
+        if (isExpired) {
+            throw new ForbiddenException();
+        }
 
         if (!isAuthorized) {
             throw new UnauthorizedException();

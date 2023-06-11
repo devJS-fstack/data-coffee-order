@@ -1,15 +1,14 @@
-import { validateString, validateNumber, validateDate } from "./common";
+import { VOUCHER_TYPES } from "src/utils/constant";
+import { validateString, validateNumber, validateDate, validateEnumString } from "./common";
 import * as Joi from "joi";
 
 export const createVoucherSchema = Joi.object({
     nameVoucher: validateString("nameVoucher"),
-    description: validateString("description"),
-    percentDiscount: validateNumber("percentDiscount"),
-    priceDiscount: validateNumber("priceDiscount"),
+    discount: validateNumber("discount"),
     minPayment: validateNumber("minPayment"),
     maxDiscount: validateNumber("maxDiscount"),
     dateExpired: validateDate("dateExpired"),
     dateStart: validateDate("dateStart"),
     limitUse: validateNumber("limitUse"),
-    type: validateString("type"),
+    type: validateEnumString(Object.values(VOUCHER_TYPES), "type"),
 });

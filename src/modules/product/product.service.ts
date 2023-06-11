@@ -303,7 +303,7 @@ export class ProductService {
     }
 
     async deleteProduct(productId: number) {
-        const countUpdate = await this.productRepository.update(
+        const [countUpdate] = await this.productRepository.update(
             {
                 deleted: true,
                 deletedAt: moment().format("YYYY-MM-DD HH:mm:ss"),
